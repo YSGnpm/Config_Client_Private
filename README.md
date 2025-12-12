@@ -69,33 +69,27 @@ const client = createClient({
 
 ## API
 
-````
-
----
-
-## API
-
 ### `createClient(options)`
 
 ConfigClient 인스턴스를 생성합니다.
 
 #### 옵션
 
-| 옵션 | 타입 | 필수 | 기본값 | 설명 |
-|------|------|------|--------|------|
-| `endpoint` | `string` | ✅ | - | Config Server URL |
-| `application` | `string \| string[]` | ✅ | - | 애플리케이션 이름 (배열 시 병합) |
-| `profiles` | `string[]` | ❌ | `['default']` | 프로파일 목록 |
-| `label`       | `string`                 | ❌   | `'main'`      | Git 브랜치/레이블  |
-| `auth`        | `AuthOptions`            | ❌   | -             | 인증 옵션          |
-| `timeout`     | `number`                 | ❌   | `5000`        | 요청 타임아웃 (ms) |
-| `headers`     | `Record<string, string>` | ❌   | `{}`          | 추가 HTTP 헤더     |
-| `retry`       | `RetryOptions`           | ❌   | -             | 재시도 옵션        |
+| 옵션          | 타입                     | 필수 | 기본값        | 설명                             |
+| ------------- | ------------------------ | ---- | ------------- | -------------------------------- |
+| `endpoint`    | `string`                 | ✅   | -             | Config Server URL                |
+| `application` | `string \| string[]`     | ✅   | -             | 애플리케이션 이름 (배열 시 병합) |
+| `profiles`    | `string[]`               | ❌   | `['default']` | 프로파일 목록                    |
+| `label`       | `string`                 | ❌   | `'main'`      | Git 브랜치/레이블                |
+| `auth`        | `AuthOptions`            | ❌   | -             | 인증 옵션                        |
+| `timeout`     | `number`                 | ❌   | `5000`        | 요청 타임아웃 (ms)               |
+| `headers`     | `Record<string, string>` | ❌   | `{}`          | 추가 HTTP 헤더                   |
+| `retry`       | `RetryOptions`           | ❌   | -             | 재시도 옵션                      |
 
 #### AuthOptions
 
-| 옵션 | 타입 | 설명 |
-|------|------|------|
+| 옵션     | 타입     | 설명         |
+| -------- | -------- | ------------ |
 | `apiKey` | `string` | API Key 인증 |
 
 #### RetryOptions
@@ -116,7 +110,7 @@ ConfigClient 인스턴스를 생성합니다.
 
 ```typescript
 const config = await client.load();
-````
+```
 
 #### `loadAsYaml(): Promise<string>`
 

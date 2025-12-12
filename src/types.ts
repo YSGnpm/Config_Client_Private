@@ -44,8 +44,8 @@ export interface RetryOptions {
 export interface ConfigClientOptions {
   /** Config Server endpoint URL */
   endpoint: string;
-  /** Application name */
-  application: string;
+  /** Application name or list of application names */
+  application: string | string[];
   /** Profile list (default: ['default']) */
   profiles?: string[];
   /** Git branch/label (default: 'main') */

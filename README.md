@@ -56,6 +56,13 @@ const client = createClient({
     apiKey: "your-api-key",
   },
 });
+
+// 다중 애플리케이션 설정 로드 (병합)
+const client = createClient({
+  endpoint: "http://localhost:8000",
+  application: ["common-config", "my-app"], // common-config + my-app 병합 (my-app 우선)
+  profiles: ["dev"],
+});
 ```
 
 ---
@@ -74,11 +81,11 @@ ConfigClient 인스턴스를 생성합니다.
 
 #### 옵션
 
-| 옵션          | 타입                     | 필수 | 기본값        | 설명               |
-| ------------- | ------------------------ | ---- | ------------- | ------------------ |
-| `endpoint`    | `string`                 | ✅   | -             | Config Server URL  |
-| `application` | `string`                 | ✅   | -             | 애플리케이션 이름  |
-| `profiles`    | `string[]`               | ❌   | `['default']` | 프로파일 목록      |
+| 옵션 | 타입 | 필수 | 기본값 | 설명 |
+|------|------|------|--------|------|
+| `endpoint` | `string` | ✅ | - | Config Server URL |
+| `application` | `string \| string[]` | ✅ | - | 애플리케이션 이름 (배열 시 병합) |
+| `profiles` | `string[]` | ❌ | `['default']` | 프로파일 목록 |
 | `label`       | `string`                 | ❌   | `'main'`      | Git 브랜치/레이블  |
 | `auth`        | `AuthOptions`            | ❌   | -             | 인증 옵션          |
 | `timeout`     | `number`                 | ❌   | `5000`        | 요청 타임아웃 (ms) |

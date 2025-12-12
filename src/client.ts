@@ -27,7 +27,7 @@ const DEFAULT_OPTIONS = {
  */
 export class ConfigClient {
   private readonly endpoint: string;
-  private readonly application: string;
+  private readonly applications: string[];
   private readonly profiles: string[];
   private readonly label: string;
   private readonly timeout: number;
@@ -37,7 +37,7 @@ export class ConfigClient {
 
   constructor(options: ConfigClientOptions) {
     this.endpoint = options.endpoint.replace(/\/+$/, "");
-    this.application = options.application;
+    this.applications = Array.isArray(options.application) ? options.application : [options.application];
     this.profiles = options.profiles ?? DEFAULT_OPTIONS.profiles;
     this.label = options.label ?? DEFAULT_OPTIONS.label;
     this.timeout = options.timeout ?? DEFAULT_OPTIONS.timeout;
@@ -135,41 +135,76 @@ export class ConfigClient {
 
   /**
    * Config load helper
+   * Fetches configuration for all applications and merges them.
+   * Applications listed later in the array have higher priority.
    * @returns Config wrapper method
    */
   async load(): Promise<Config> {
-    const url = `${this.endpoint}/${this.application}/${this.profileString}/${this.label}`;
-    const response = await this.fetchWithRetry(url);
-    const data: ConfigResponse = await response.json();
-    return new Config(data);
+    const requests = this.applications.map(async (app) => {
+      const url = `${this.endpoint}/${app}/${this.profileString}/${this.label}`;
+      const response = await this.fetchWithRetry(url);
+      return response.json() as Promise<ConfigResponse>;
+    });
+
+    const responses = await Promise.all(requests);
+
+    if (responses.length === 0) {
+      throw new ConfigClientError("No applications configured");
+    }
+
+    // Merge responses
+    // The last application in the list should have the highest priority.
+    // In ConfigResponse, propertySources[0] has the highest priority.
+    // So we reverse the responses (last app becomes first) and then flatMap their propertySources.
+    const mergedPropertySources = [...responses].reverse().flatMap((res) => res.propertySources);
+
+    // Use metadata from the last (most specific) application
+    const mainResponse = responses[responses.length - 1];
+
+    const mergedResponse: ConfigResponse = {
+      name: responses.map((r) => r.name).join(","),
+      profiles: mainResponse.profiles,
+      label: mainResponse.label,
+      version: mainResponse.version,
+      state: mainResponse.state,
+      propertySources: mergedPropertySources,
+    };
+
+    return new Config(mergedResponse);
   }
 
   /**
    * Config load (YAML)
+   * Only loads the first application's configuration
    * @returns YAML string
    */
   async loadAsYaml(): Promise<string> {
-    const url = `${this.endpoint}/${this.application}-${this.profiles[0]}.yml`;
+    const app = this.applications[0];
+    const url = `${this.endpoint}/${app}-${this.profiles[0]}.yml`;
     const response = await this.fetchWithRetry(url);
     return response.text();
   }
 
   /**
    * Config load (Properties)
+   * Only loads the first application's configuration
    * @returns Properties string
    */
   async loadAsProperties(): Promise<string> {
-    const url = `${this.endpoint}/${this.application}-${this.profiles[0]}.properties`;
+    const app = this.applications[0];
+    const url = `${this.endpoint}/${app}-${this.profiles[0]}.properties`;
     const response = await this.fetchWithRetry(url);
     return response.text();
   }
 
   /**
    * Config load (Json)
+   * Only loads the first application's configuration
    * @returns JSON string
    */
   async loadAsJson(): Promise<string> {
-    const url = `${this.endpoint}/${this.application}-${this.profiles[0]}.json`;
+    const app = this.applications[0];
+    const url = `${this.endpoint}/${app}-${this.profiles[0]}.json`;
     const response = await this.fetchWithRetry(url);
     return response.text();
   }
@@ -209,9 +244,9 @@ export class ConfigClient {
    * Client infomation string value
    */
   toString(): string {
-    return `ConfigClient(endpoint=${this.endpoint}, application=${this.application}, profiles=[${this.profiles.join(
+    return `ConfigClient(endpoint=${this.endpoint}, applications=[${this.applications.join(
       ", "
-    )}], label=${this.label})`;
+    )}], profiles=[${this.profiles.join(", ")}], label=${this.label})`;
   }
 }
 
